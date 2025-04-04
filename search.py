@@ -53,8 +53,12 @@ Answer the question: {query}"""
     return response.json()["response"]
 
 if __name__ == "__main__":
-    query = input("Enter your question: ")
-    top_chunks = retrieve_top_k(query)
-    answer = generate_response(top_chunks, query)
-    print("\nAnswer:")
-    print(answer)
+    while True:
+        query = input("\nEnter your question: ")
+        top_chunks = retrieve_top_k(query)
+        answer = generate_response(top_chunks, query)
+        print("\nAnswer:")
+        print(answer)
+        if query.lower() == "exit":
+            print("Goodbye!")
+            break
