@@ -38,10 +38,11 @@
 
 #### Running the Application:
 1. First, ingest the PDF documents:
+     Make sure to update CORPUS_DIR to "file/path/to/your/mktg4604_upskill-main/Corpus"
+     Then run:
    ```
    python ingest.py
    ```
-   Make sure to update CORPUS_DIR to "file/path/to/your/mktg4604_upskill-main/Corpus"
 
 3. Start the web application:
    ```
