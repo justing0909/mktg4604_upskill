@@ -13,19 +13,6 @@ TOP_K = 5
 
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
-# Ask user for their skill domain
-print("What would you like to upskill in?")
-print("1. Data Science\n2. Business\n3. Both")
-choice = input("Enter 1, 2, or 3: ").strip()
-
-FILTER_KEYWORDS = []
-if choice == "1":
-    FILTER_KEYWORDS = ["Data Science"]
-elif choice == "2":
-    FILTER_KEYWORDS = ["Business"]
-else:
-    FILTER_KEYWORDS = []
-
 def embed_query(query):
     response = requests.post("http://localhost:11434/api/embeddings", json={
         "model": OLLAMA_MODEL,
@@ -36,7 +23,7 @@ def embed_query(query):
 def cosine_similarity(a, b):
     return np.dot(a, b) / (norm(a) * norm(b))
 
-def retrieve_top_k(query, k=TOP_K):
+def retrieve_top_k(query, skill_domain='both', k=TOP_K):
     query_embedding = embed_query(query)
     results = []
 
@@ -44,9 +31,13 @@ def retrieve_top_k(query, k=TOP_K):
         key = key.decode()
         data = r.hgetall(key)
         source_path = data[b'source'].decode()
-
-        if FILTER_KEYWORDS and not any(keyword in source_path for keyword in FILTER_KEYWORDS):
-            continue
+        
+        # Filter by skill domain if specified
+        if skill_domain != 'both':
+            if skill_domain == 'data-science' and 'Data Science' not in source_path:
+                continue
+            if skill_domain == 'business' and 'Business' not in source_path:
+                continue
 
         chunk_embedding = np.array(json.loads(data[b'embedding'].decode()))
         similarity = cosine_similarity(query_embedding, chunk_embedding)
@@ -98,7 +89,11 @@ Use the context below (extracted from university syllabi) to answer their questi
 - Key skills to practice and how to improve them
 - Career-relevant advice
 
-Only suggest what is relevant based on the user's needs or wants along with expert knowledge.
+When recommending resources:
+1. Format book recommendations as "Title" by Author
+2. Include direct links to online resources when available
+3. Group resources under clear headings like "Here are some resources:" or "Learn more:"
+4. Make recommendations specific to the user's question
 
 Context:
 {context}
@@ -114,8 +109,15 @@ Upskilling-focused response:"""
 
     return response.json()["response"]
 
+# Command-line interface
 if __name__ == "__main__":
     skill_map = {"1": "data-science", "2": "business", "3": "both"}
+    
+    # Ask user for their skill domain
+    print("What would you like to upskill in?")
+    print("1. Data Science\n2. Business\n3. Both")
+    choice = input("Enter 1, 2, or 3: ").strip()
+    
     skill_domain = skill_map.get(choice, "both")
 
     read_books = input("\nList any books you've already read (comma-separated), or press Enter to skip: ")
@@ -127,7 +129,7 @@ if __name__ == "__main__":
             print("\nThanks for using our upskill bot! Have a shrimply impeccable day.")
             break
 
-        top_chunks = retrieve_top_k(query)
+        top_chunks = retrieve_top_k(query, skill_domain)
         if not top_chunks:
             print("No relevant information found for your skill area.")
         else:
