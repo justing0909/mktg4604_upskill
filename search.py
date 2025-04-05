@@ -61,18 +61,21 @@ def generate_response(context_chunks, query, skill_domain='both', read_books=Non
     if skill_domain == 'data-science':
         # Adjust data science persona as desired
         domain_text = (
+            "Kevin Lin is a 26-year-old recent graduate with a background in statistics and data science, currently working in a junior analyst role at a healthcare startup. He is focused on deepening his skills in areas like machine learning, data visualization, and predictive modeling. Kevin spends his free time working through online courses, participating in Kaggle competitions, and experimenting with Python and R to build personal projects. While he’s comfortable writing code and using tools like pandas, scikit-learn, and Tableau, he’s still learning how to structure end-to-end data workflows, communicate insights effectively to non-technical audiences, and evaluate model performance beyond just accuracy."
             "You are a chief data scientist and mentor, providing guidance to an ambitious senior undergraduate student. "
             "Focus on technical depth, real-world applications, and resources that strengthen programming, machine learning, data visualization, and data engineering skills."
         )
     elif skill_domain == 'business':
         # Adjust business persona as desired
         domain_text = (
-            "You are a strategic business mentor and executive coach, advising a soon-to-graduate business major. "
+            "Maria Alvarez is a 38-year-old professional who recently transitioned into a business operations role after years working in customer service and team leadership. Eager to grow her understanding of business fundamentals, she’s diving into topics like financial management, accounting basics, and key performance metrics. Maria is motivated by a desire to contribute more strategically at work and eventually move into a managerial position. She’s currently learning how to read financial statements, build simple budgets, and understand core metrics like profit margin, cash flow, and return on investment. While she’s comfortable with spreadsheets and online tools, she often finds the language of finance and accounting intimidating. Maria is looking for clear, jargon-free explanations, real-world examples, and visual aids that break down complex concepts into something she can apply right away."
+            "You are a strategic business mentor and executive coach, advising a soon-to-graduate business major."
             "Focus on core business principles, case-based learning, leadership, finance, and marketing strategies that are useful for entry-level professionals."
         )
     else:
         # Adjust data science + business personas as desired
         domain_text = (
+            "Alex Chen is a 22-year-old undergraduate student pursuing a combined degree in Data Science and Business Administration with a concentration in Financial Technology (FinTech). With a strong foundation in statistics, machine learning, and Python programming, Alex is equally comfortable analyzing data models as he is discussing market trends and business strategies. He thrives at the intersection of technology and finance, often exploring how data can drive smarter decisions in areas like portfolio optimization, risk analysis, and customer personalization. Alex has completed projects involving real-time financial dashboards, algorithmic trading simulations, and consumer behavior analysis. Passionate about innovation in the FinTech space, His ideal learning environment blends case studies, hands-on coding, and real-world data challenges that prepare him for roles that demand both analytical depth and strategic thinking."
             "You are a cross-domain upskilling mentor with deep experience in both Data Science and Business. "
             "Help the student understand how these domains intersect, and recommend resources that bridge analytics, strategy, and communication skills."
         )
@@ -88,7 +91,7 @@ def generate_response(context_chunks, query, skill_domain='both', read_books=Non
 {domain_text}
 {read_books_text}
 
-Use the context below to answer their question. Also, recommend:
+Use the context below (extracted from university syllabi) to answer their question. Also, recommend:
 - Relevant textbooks or academic readings
 - Online resources, tools, or platforms (e.g. Coursera, LinkedIn Learning)
 - Podcasts, newsletters, or blogs to stay up-to-date
