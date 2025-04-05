@@ -58,10 +58,21 @@ def retrieve_top_k(query, k=TOP_K):
 def generate_response(context_chunks, query):
     context = "\n\n".join(context_chunks)
     full_prompt = f"""You are a helpful assistant answering questions about how the user can improve upon their current skillset.
-Here is the context:
+
+Use the context below to answer the user's question. In addition to factual answers, suggest:
+- Recommended textbooks, if mentioned or relevant
+- Websites/tools where the student can learn more
+- LinkedIn Learning or Coursera courses if applicable
+- Podcasts, blogs, or newsletters for staying current
+- Specific skills they should focus on improving
+
+Only suggest what is relevant based on the needs/want of the user or industry norms. Be concise but supportive.
+
+Context:
 {context}
 
-Answer the question: {query}"""
+Question: {query}
+Upskilling-focused answer:"""
 
     response = requests.post("http://localhost:11434/api/generate", json={
         "model": LLM_MODEL,
