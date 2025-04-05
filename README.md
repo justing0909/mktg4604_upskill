@@ -41,18 +41,19 @@
    ```
    python ingest.py
    ```
+   Make sure to update CORPUS_DIR to "file/path/to/your/mktg4604_upskill-main/Corpus"
 
-2. Start the web application:
+3. Start the web application:
    ```
    python app.py
    ```
 
-3. Open your browser and navigate to:
+4. Open your browser and navigate to:
    ```
    http://localhost:5001
    ```
 
-4. Start chatting with the Llama model about the content in your PDF documents!
+5. Start chatting with the Llama model about the content in your PDF documents!
 
 #### Features:
 - Modern, responsive chat interface
