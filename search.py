@@ -34,10 +34,14 @@ def retrieve_top_k(query, skill_domain='both', k=TOP_K):
         
         # Filter by skill domain if specified
         if skill_domain != 'both':
-            if skill_domain == 'data-science' and 'Data Science' not in source_path:
-                continue
-            if skill_domain == 'business' and 'Business' not in source_path:
-                continue
+            if skill_domain == 'data-science':
+                # Include documents from the Data Science folder
+                if 'Data Science' not in source_path:
+                    continue
+            if skill_domain == 'business':
+                # Include documents from the Business folder
+                if 'Business' not in source_path:
+                    continue
 
         chunk_embedding = np.array(json.loads(data[b'embedding'].decode()))
         similarity = cosine_similarity(query_embedding, chunk_embedding)
@@ -48,46 +52,24 @@ def retrieve_top_k(query, skill_domain='both', k=TOP_K):
 
 def generate_response(context_chunks, query, skill_domain='both', read_books=None):
     context = "\n\n".join(context_chunks)
-
+    
+    # Customize prompt based on skill domain
+    domain_text = ""
     if skill_domain == 'data-science':
-        # Adjust data science persona as desired
-        domain_text = (
-            "Kevin Lin is a 26-year-old recent graduate with a background in statistics and data science, currently working in a junior analyst role at a healthcare startup. He is focused on deepening his skills in areas like machine learning, data visualization, and predictive modeling. Kevin spends his free time working through online courses, participating in Kaggle competitions, and experimenting with Python and R to build personal projects. While he’s comfortable writing code and using tools like pandas, scikit-learn, and Tableau, he’s still learning how to structure end-to-end data workflows, communicate insights effectively to non-technical audiences, and evaluate model performance beyond just accuracy."
-            "You are a chief data scientist and mentor, providing guidance to an ambitious senior undergraduate student. "
-            "Focus on technical depth, real-world applications, and resources that strengthen programming, machine learning, data visualization, and data engineering skills."
-        )
+        domain_text = "Data Science: Kevin Lin is a 26-year-old recent graduate with a background in statistics and data science, currently working in a junior analyst role at a healthcare startup. He is focused on deepening his skills in areas like machine learning, data visualization, and predictive modeling. Kevin spends his free time working through online courses, participating in Kaggle competitions, and experimenting with Python and R to build personal projects. While he's comfortable writing code and using tools like pandas, scikit-learn, and Tableau, he's still learning how to structure end-to-end data workflows, communicate insights effectively to non-technical audiences, and evaluate model performance beyond just accuracy. Offer resources based on the corpus of data indexed, while providing directly accessible links and resources to the user, and continue the conversation after responding."
     elif skill_domain == 'business':
-        # Adjust business persona as desired
-        domain_text = (
-            "Maria Alvarez is a 38-year-old professional who recently transitioned into a business operations role after years working in customer service and team leadership. Eager to grow her understanding of business fundamentals, she’s diving into topics like financial management, accounting basics, and key performance metrics. Maria is motivated by a desire to contribute more strategically at work and eventually move into a managerial position. She’s currently learning how to read financial statements, build simple budgets, and understand core metrics like profit margin, cash flow, and return on investment. While she’s comfortable with spreadsheets and online tools, she often finds the language of finance and accounting intimidating. Maria is looking for clear, jargon-free explanations, real-world examples, and visual aids that break down complex concepts into something she can apply right away."
-            "You are a strategic business mentor and executive coach, advising a soon-to-graduate business major."
-            "Focus on core business principles, case-based learning, leadership, finance, and marketing strategies that are useful for entry-level professionals."
-        )
+        domain_text = "Business: Maria Alvarez is a 38-year-old professional who recently transitioned into a business operations role after years working in customer service and team leadership. Eager to grow her understanding of business fundamentals, she's diving into topics like financial management, accounting basics, and key performance metrics. Maria is motivated by a desire to contribute more strategically at work and eventually move into a managerial position. She's currently learning how to read financial statements, build simple budgets, and understand core metrics like profit margin, cash flow, and return on investment. While she's comfortable with spreadsheets and online tools, she often finds the language of finance and accounting intimidating. Maria is looking for clear, jargon-free explanations, real-world examples, and visual aids that break down complex concepts into something she can apply right away. Offer resources based on the corpus of data indexed, while providing directly accessible links and resources to the user, and continue the conversation after responding."
     else:
-        # Adjust data science + business personas as desired
-        domain_text = (
-            "Alex Chen is a 22-year-old undergraduate student pursuing a combined degree in Data Science and Business Administration with a concentration in Financial Technology (FinTech). With a strong foundation in statistics, machine learning, and Python programming, Alex is equally comfortable analyzing data models as he is discussing market trends and business strategies. He thrives at the intersection of technology and finance, often exploring how data can drive smarter decisions in areas like portfolio optimization, risk analysis, and customer personalization. Alex has completed projects involving real-time financial dashboards, algorithmic trading simulations, and consumer behavior analysis. Passionate about innovation in the FinTech space, His ideal learning environment blends case studies, hands-on coding, and real-world data challenges that prepare him for roles that demand both analytical depth and strategic thinking."
-            "You are a cross-domain upskilling mentor with deep experience in both Data Science and Business. "
-            "Help the student understand how these domains intersect, and recommend resources that bridge analytics, strategy, and communication skills."
-        )
-
+        domain_text = "Alex Chen is a 22-year-old undergraduate student pursuing a dual degree in Data Science and Business Administration with a concentration in Financial Technology (FinTech). With a strong foundation in statistics, machine learning, and Python programming, Alex is equally comfortable analyzing data models as he is discussing market trends and business strategies. He thrives at the intersection of technology and finance, often exploring how data can drive smarter decisions in areas like portfolio optimization, risk analysis, and customer personalization. Alex has completed projects involving real-time financial dashboards, algorithmic trading simulations, and consumer behavior analysis. Passionate about innovation in the FinTech space, His ideal learning environment blends case studies, hands-on coding, and real-world data challenges that prepare him for roles that demand both analytical depth and strategic thinking."
+    
+    # Add information about read books
     read_books_text = ""
     if read_books and len(read_books) > 0:
-        read_books_text = (
-            f"\nNote: The student has already read the following books, so do not suggest them again: {', '.join(read_books)}."
-        )
-
-    full_prompt = f"""You are an AI-powered upskilling assistant helping students prepare for careers in their domain.
-
+        read_books_text = f"The user has already read the following books, so please avoid recommending them again: {', '.join(read_books)}."
+    
+    full_prompt = f"""You are a helpful assistant providing guidance on upskilling.
 {domain_text}
 {read_books_text}
-
-Use the context below (extracted from university syllabi) to answer their question. Also, recommend:
-- Relevant textbooks or academic readings
-- Online resources, tools, or platforms (e.g. Coursera, LinkedIn Learning)
-- Podcasts, newsletters, or blogs to stay up-to-date
-- Key skills to practice and how to improve them
-- Career-relevant advice
 
 When recommending resources:
 1. Format book recommendations as "Title" by Author
@@ -95,11 +77,10 @@ When recommending resources:
 3. Group resources under clear headings like "Here are some resources:" or "Learn more:"
 4. Make recommendations specific to the user's question
 
-Context:
+Here is the context:
 {context}
 
-Question: {query}
-Upskilling-focused response:"""
+Answer the question: {query}"""
 
     response = requests.post("http://localhost:11434/api/generate", json={
         "model": LLM_MODEL,

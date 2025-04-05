@@ -49,6 +49,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Handle Enter key in textarea
+    userInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatForm.dispatchEvent(new Event('submit'));
+        }
+    });
+    
     // Handle chat form submission
     chatForm.addEventListener('submit', async function(e) {
         e.preventDefault();

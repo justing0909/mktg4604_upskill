@@ -17,8 +17,8 @@
     --sidebar-bg: #fff;
     --message-bg: #fff;
     --user-message-bg: #e9f5ff;
+    --user-message-color: #0056b3;
     --bot-message-bg: #f8f9fa;
-    --user-message-color: white;
     --input-bg: #f9f9f9;
     --shadow-color: rgba(0, 0, 0, 0.1);
     --skill-option-bg: #f1f1f1;
@@ -340,6 +340,7 @@ body.dark-mode .dark-mode-toggle:hover {
     background-color: var(--user-message-bg);
     color: var(--user-message-color);
     border-bottom-right-radius: 4px;
+    font-weight: 500;
 }
 
 .bot .message-content {
