@@ -60,3 +60,9 @@
 - Support for multi-line messages (Shift+Enter)
 - Error handling and user feedback
 - Mobile-friendly design
+
+##### Personalized Chatbot-Integrated Bookshelf!
+- Receive recommendations from a personalized chatbot
+- Add recommendations to bookshelf with one-click
+- Check off books as you go
+- Get notified before clearing bookshelf
