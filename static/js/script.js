@@ -8,12 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBookshelfButton = document.getElementById('clear-bookshelf');
     const darkModeToggle = document.getElementById('dark-mode-toggle');
     
-    // Track selected skill domain
-    let selectedSkill = 'both';
+    let currentSkillDomain = 'both';
     let lastSkillDomain = null;
-    
-    // Load books from localStorage
-    let savedBooks = JSON.parse(localStorage.getItem('bookshelf') || '[]');
+    let books = JSON.parse(localStorage.getItem('books')) || [];
     
     // Dark mode functionality
     const isDarkMode = localStorage.getItem('darkMode') === 'true';
@@ -29,36 +26,38 @@ document.addEventListener('DOMContentLoaded', () => {
         darkModeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
     });
     
-    // Initialize bookshelf
-    renderBookshelf();
-    
-    // Handle clear bookshelf
+    // Clear bookshelf functionality
     clearBookshelfButton.addEventListener('click', () => {
         if (confirm('Are you sure you want to clear your bookshelf?')) {
-            savedBooks = [];
-            localStorage.setItem('bookshelf', JSON.stringify(savedBooks));
+            books = [];
+            localStorage.setItem('books', JSON.stringify(books));
             renderBookshelf();
         }
     });
-
+    
+    // Load books from localStorage
+    renderBookshelf();
+    
     // Handle skill selection
     skillOptions.forEach(option => {
         option.addEventListener('click', () => {
+            const skill = option.getAttribute('data-skill');
+            
             // Remove active class from all options
             skillOptions.forEach(opt => opt.classList.remove('active'));
             
             // Add active class to selected option
             option.classList.add('active');
             
-            // Update selected skill
-            selectedSkill = option.getAttribute('data-skill');
+            // Update current skill domain
+            currentSkillDomain = skill;
             
             // Only show persona message if switching from a different domain
-            if (lastSkillDomain !== null && lastSkillDomain !== selectedSkill) {
+            if (lastSkillDomain !== null && lastSkillDomain !== currentSkillDomain) {
                 let personaMessage = '';
-                if (selectedSkill === 'data-science') {
+                if (skill === 'data-science') {
                     personaMessage = "I'm now your Data Science assistant. How can I help you with Data Science skills today?";
-                } else if (selectedSkill === 'business') {
+                } else if (skill === 'business') {
                     personaMessage = "I'm now your Business assistant. How can I help you with Business skills today?";
                 } else {
                     personaMessage = "I'm now your assistant for both Data Science and Business skills. How can I help you today?";
@@ -68,10 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             // Update last skill domain
-            lastSkillDomain = selectedSkill;
+            lastSkillDomain = currentSkillDomain;
         });
     });
-
+    
     // Auto-resize textarea
     userInput.addEventListener('input', () => {
         userInput.style.height = 'auto';
@@ -96,16 +95,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const typingIndicator = addTypingIndicator();
         
         try {
+            // Get read books
+            const readBooks = books.filter(book => book.read).map(book => book.title);
+            
             // Send message to backend
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ 
-                    message,
-                    skill_domain: selectedSkill,
-                    read_books: getReadBookTitles()
+                body: JSON.stringify({
+                    message: message,
+                    skill_domain: currentSkillDomain,
+                    read_books: readBooks
                 })
             });
             
@@ -122,8 +124,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add bot response to chat
             addMessage(data.response, 'bot');
             
-            // Check for book recommendations in the response
+            // Check for book recommendations and resources
             checkForBookRecommendations(data.response);
+            checkForResourceRecommendations(data.response);
         } catch (error) {
             // Remove typing indicator
             typingIndicator.remove();
@@ -199,167 +202,143 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Check for book recommendations in the response
     function checkForBookRecommendations(response) {
-        // Simple regex to detect book recommendations
-        // This is a basic implementation and could be improved
-        const bookRegex = /"([^"]+)" by ([^\.]+)\./g;
+        // Enhanced regex to detect book recommendations with various formats
+        const bookRegex = /"([^"]+)" by ([^"]+)|"([^"]+)"|"([^"]+)" \(([^)]+)\)/g;
         let match;
         let foundBooks = false;
         
         while ((match = bookRegex.exec(response)) !== null) {
             foundBooks = true;
-            const title = match[1];
-            const author = match[2].trim();
+            let title, author;
             
-            // Check if book is already in bookshelf
-            if (!savedBooks.some(book => book.title === title)) {
+            // Handle different book formats
+            if (match[1] && match[2]) {
+                // Format: "Title" by Author
+                title = match[1];
+                author = match[2].trim();
+            } else if (match[3]) {
+                // Format: "Title"
+                title = match[3];
+                author = "Unknown Author";
+            } else if (match[4] && match[5]) {
+                // Format: "Title" (Author)
+                title = match[4];
+                author = match[5].trim();
+            }
+            
+            // Check if book is already in the bookshelf
+            if (!books.some(book => book.title === title)) {
                 // Create book recommendation element
                 const bookRecommendation = document.createElement('div');
-                bookRecommendation.classList.add('book-recommendation');
-                
-                const header = document.createElement('div');
-                header.classList.add('book-recommendation-header');
-                
-                const titleElement = document.createElement('div');
-                titleElement.classList.add('book-recommendation-title');
-                titleElement.textContent = `"${title}"`;
-                
-                const addButton = document.createElement('button');
-                addButton.classList.add('add-to-bookshelf');
-                addButton.innerHTML = '<i class="fas fa-plus"></i> Add to Bookshelf';
-                addButton.addEventListener('click', () => {
-                    addBookToBookshelf(title, author);
-                    bookRecommendation.remove();
-                });
-                
-                header.appendChild(titleElement);
-                header.appendChild(addButton);
-                
-                const details = document.createElement('div');
-                details.classList.add('book-recommendation-details');
-                details.textContent = `by ${author}`;
-                
-                bookRecommendation.appendChild(header);
-                bookRecommendation.appendChild(details);
+                bookRecommendation.className = 'book-recommendation';
+                bookRecommendation.innerHTML = `
+                    <div class="book-recommendation-header">
+                        <div class="book-recommendation-title">${title}</div>
+                        <button class="add-to-bookshelf" onclick="addBookToBookshelf('${title.replace(/'/g, "\\'")}', '${author.replace(/'/g, "\\'")}', '${currentSkillDomain}')">
+                            <i class="fas fa-plus"></i> Add to Bookshelf
+                        </button>
+                    </div>
+                    <div class="book-recommendation-details">by ${author}</div>
+                `;
                 
                 // Add to the last bot message
-                const lastBotMessage = document.querySelector('.message.bot:last-child .message-content');
-                if (lastBotMessage) {
-                    lastBotMessage.appendChild(bookRecommendation);
-                }
+                const lastBotMessage = chatMessages.querySelector('.message.bot:last-child .message-content');
+                lastBotMessage.appendChild(bookRecommendation);
             }
+        }
+        
+        // If books were found, add a message about the bookshelf
+        if (foundBooks) {
+            const bookshelfMessage = document.createElement('div');
+            bookshelfMessage.className = 'bookshelf-message';
+            bookshelfMessage.innerHTML = `
+                <p><i class="fas fa-info-circle"></i> You can add these books to your bookshelf by clicking the "Add to Bookshelf" button.</p>
+            `;
+            
+            // Add to the last bot message
+            const lastBotMessage = chatMessages.querySelector('.message.bot:last-child .message-content');
+            lastBotMessage.appendChild(bookshelfMessage);
+        }
+    }
+    
+    // Check for resource recommendations
+    function checkForResourceRecommendations(response) {
+        // Look for common resource indicators
+        const resourceIndicators = [
+            'course', 'courses', 'tutorial', 'tutorials', 'website', 'websites', 
+            'podcast', 'podcasts', 'video', 'videos', 'article', 'articles',
+            'blog', 'blogs', 'newsletter', 'newsletters', 'tool', 'tools',
+            'platform', 'platforms', 'resource', 'resources'
+        ];
+        
+        let hasResources = false;
+        for (const indicator of resourceIndicators) {
+            if (response.toLowerCase().includes(indicator)) {
+                hasResources = true;
+                break;
+            }
+        }
+        
+        if (hasResources) {
+            const resourceMessage = document.createElement('div');
+            resourceMessage.className = 'resource-message';
+            resourceMessage.innerHTML = `
+                <p><i class="fas fa-lightbulb"></i> I've included links to resources in my response. You can click on them to open in a new tab.</p>
+            `;
+            
+            // Add to the last bot message
+            const lastBotMessage = chatMessages.querySelector('.message.bot:last-child .message-content');
+            lastBotMessage.appendChild(resourceMessage);
         }
     }
     
     // Add book to bookshelf
-    function addBookToBookshelf(title, author) {
+    window.addBookToBookshelf = function(title, author, category) {
         // Check if book already exists
-        if (savedBooks.some(book => book.title === title)) {
-            return;
+        if (!books.some(book => book.title === title)) {
+            // Add new book
+            books.push({
+                title: title,
+                author: author,
+                category: category,
+                read: false
+            });
+            
+            // Save to localStorage
+            localStorage.setItem('books', JSON.stringify(books));
+            
+            // Update bookshelf display
+            renderBookshelf();
+            
+            // Show confirmation message
+            addMessage(`Added "${title}" to your bookshelf!`, 'bot');
         }
-        
-        // Add new book
-        const newBook = {
-            id: Date.now().toString(),
-            title: title,
-            author: author,
-            category: selectedSkill,
-            read: false
-        };
-        
-        savedBooks.push(newBook);
-        localStorage.setItem('bookshelf', JSON.stringify(savedBooks));
-        
-        // Update bookshelf display
+    };
+    
+    // Toggle book read status
+    window.toggleBookReadStatus = function(index) {
+        books[index].read = !books[index].read;
+        localStorage.setItem('books', JSON.stringify(books));
         renderBookshelf();
-        
-        // Show confirmation message
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', 'bot');
-        
-        const contentDiv = document.createElement('div');
-        contentDiv.classList.add('message-content');
-        
-        const paragraph = document.createElement('p');
-        paragraph.textContent = `I've added "${title}" to your bookshelf.`;
-        
-        contentDiv.appendChild(paragraph);
-        messageDiv.appendChild(contentDiv);
-        chatMessages.appendChild(messageDiv);
-        
-        // Scroll to bottom
-        scrollToBottom();
-    }
+    };
     
     // Render bookshelf
     function renderBookshelf() {
-        // Clear bookshelf
-        bookshelf.innerHTML = '';
-        
-        if (savedBooks.length === 0) {
-            const emptyMessage = document.createElement('p');
-            emptyMessage.classList.add('empty-bookshelf');
-            emptyMessage.textContent = 'No books added yet. Books recommended by the assistant will appear here.';
-            bookshelf.appendChild(emptyMessage);
+        if (books.length === 0) {
+            bookshelf.innerHTML = '<p class="empty-bookshelf">No books added yet. Books recommended by the assistant will appear here.</p>';
             return;
         }
         
-        // Add each book
-        savedBooks.forEach(book => {
-            const bookItem = document.createElement('div');
-            bookItem.classList.add('book-item');
-            if (book.read) {
-                bookItem.classList.add('read');
-            }
-            
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.classList.add('book-checkbox');
-            checkbox.checked = book.read;
-            checkbox.addEventListener('change', () => {
-                toggleBookReadStatus(book.id);
-            });
-            
-            const content = document.createElement('div');
-            content.classList.add('book-content');
-            
-            const title = document.createElement('div');
-            title.classList.add('book-title');
-            title.textContent = book.title;
-            
-            const author = document.createElement('div');
-            author.classList.add('book-author');
-            author.textContent = `by ${book.author}`;
-            
-            const category = document.createElement('div');
-            category.classList.add('book-category', book.category);
-            category.textContent = book.category === 'data-science' ? 'Data Science' : 
-                                  book.category === 'business' ? 'Business' : 'Both';
-            
-            content.appendChild(title);
-            content.appendChild(author);
-            content.appendChild(category);
-            
-            bookItem.appendChild(checkbox);
-            bookItem.appendChild(content);
-            
-            bookshelf.appendChild(bookItem);
-        });
-    }
-    
-    // Toggle book read status
-    function toggleBookReadStatus(bookId) {
-        const bookIndex = savedBooks.findIndex(book => book.id === bookId);
-        if (bookIndex !== -1) {
-            savedBooks[bookIndex].read = !savedBooks[bookIndex].read;
-            localStorage.setItem('bookshelf', JSON.stringify(savedBooks));
-            renderBookshelf();
-        }
-    }
-    
-    // Get titles of read books
-    function getReadBookTitles() {
-        return savedBooks
-            .filter(book => book.read)
-            .map(book => book.title);
+        bookshelf.innerHTML = books.map((book, index) => `
+            <div class="book-item ${book.read ? 'read' : ''}">
+                <input type="checkbox" class="book-checkbox" ${book.read ? 'checked' : ''} 
+                       onchange="toggleBookReadStatus(${index})">
+                <div class="book-content">
+                    <div class="book-title">${book.title}</div>
+                    <div class="book-author">by ${book.author}</div>
+                    <div class="book-category ${book.category}">${book.category}</div>
+                </div>
+            </div>
+        `).join('');
     }
 }); 
