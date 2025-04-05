@@ -3,13 +3,19 @@ import numpy as np
 import json
 import requests
 from numpy.linalg import norm
+import os
+from dotenv import load_dotenv
 
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
-REDIS_DB = 0
-OLLAMA_MODEL = "nomic-embed-text"
-LLM_MODEL = "llama3.2:1b"  # Use llama3 if memory allows
-TOP_K = 5
+# Load environment variables
+load_dotenv()
+
+# Configuration from environment variables
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_DB = int(os.getenv("REDIS_DB", 0))
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "nomic-embed-text")
+LLM_MODEL = os.getenv("LLM_MODEL", "mistral")
+TOP_K = int(os.getenv("TOP_K", 3))
 
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
@@ -76,6 +82,10 @@ When recommending resources:
 2. Include direct links to online resources when available
 3. Group resources under clear headings like "Here are some resources:" or "Learn more:"
 4. Make recommendations specific to the user's question
+5. ALWAYS include at least 2-3 resources in your response, even if they're not explicitly mentioned in the context
+6. For each topic, recommend at least one book and one online resource
+7. Format URLs as complete links (e.g., https://www.example.com/resource)
+8. After explaining the answer, always add a section titled "Resources:" with your recommendations
 
 Here is the context:
 {context}

@@ -220,6 +220,43 @@ body.dark-mode .dark-mode-toggle:hover {
     transition: color 0.3s, opacity 0.3s;
 }
 
+/* Multi-select controls */
+.multi-select-controls {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: var(--container-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.multi-select-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.action-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+}
+
+.action-button:hover {
+    background-color: var(--accent-color);
+}
+
+/* Books container */
+.books-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .book-item {
     background-color: var(--book-item-bg);
     border-radius: 8px;
@@ -230,6 +267,7 @@ body.dark-mode .dark-mode-toggle:hover {
     align-items: flex-start;
     gap: 10px;
     transition: background-color 0.3s, box-shadow 0.3s;
+    position: relative;
 }
 
 .book-item.read {
@@ -237,11 +275,61 @@ body.dark-mode .dark-mode-toggle:hover {
     border-left: 3px solid var(--book-item-read-border);
 }
 
+.book-item.selected {
+    background-color: #e6f2ff;
+    border-left: 3px solid var(--primary-color);
+}
+
 .book-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-top: 3px;
 }
 
-.book-content {
+.book-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.book-checkbox label {
+    position: relative;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background-color: var(--container-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.book-checkbox input[type="checkbox"]:checked + label {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.book-checkbox label:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.book-checkbox input[type="checkbox"]:checked + label:after {
+    display: block;
+}
+
+.book-info {
     flex: 1;
 }
 
@@ -250,6 +338,17 @@ body.dark-mode .dark-mode-toggle:hover {
     margin-bottom: 5px;
     color: var(--text-color);
     transition: color 0.3s;
+}
+
+.book-title a {
+    color: var(--link-color);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.book-title a:hover {
+    color: var(--link-hover-color);
+    text-decoration: underline;
 }
 
 .book-author {
@@ -632,6 +731,52 @@ body.dark-mode .dark-mode-toggle:hover {
     font-weight: bold;
     margin-bottom: 5px;
     color: var(--resource-message-color);
+}
+
+.resource-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 12px;
+    background-color: var(--container-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    border-left: 3px solid var(--primary-color);
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.resource-link {
+    color: var(--link-color);
+    text-decoration: none;
+    flex: 1;
+    margin-right: 10px;
+    transition: color 0.3s;
+}
+
+.resource-link:hover {
+    color: var(--link-hover-color);
+    text-decoration: underline;
+}
+
+.resource-item .add-to-bookshelf {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background-color 0.3s;
+}
+
+.resource-item .add-to-bookshelf:hover {
+    background-color: var(--accent-color);
+}
+
+.resource-item .add-to-bookshelf:disabled {
+    background-color: var(--secondary-color);
+    cursor: not-allowed;
 }
 
 /* Responsive Styles */

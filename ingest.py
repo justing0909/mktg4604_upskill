@@ -4,13 +4,17 @@ import redis
 import hashlib
 import json
 import requests
+from dotenv import load_dotenv
 
-# Constants (change the CORPUS_DIR to where your 'Corpus' folder is stored
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
-REDIS_DB = 0
-CORPUS_DIR = "Users/justi/Downloads/MKTG4604//mktg4604_upskill/Corpus"
-OLLAMA_MODEL = "nomic-embed-text"
+# Load environment variables
+load_dotenv()
+
+# Constants from environment variables
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_DB = int(os.getenv("REDIS_DB", 0))
+CORPUS_DIR = os.getenv("CORPUS_DIR", "/Users/justi/Downloads/MKTG4604/mktg4604_upskill/Corpus")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "nomic-embed-text")
 
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 

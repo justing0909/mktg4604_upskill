@@ -173,20 +173,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove persona text if present
         const cleanedResponse = response.replace(/^(?:I am|I'm) (?:Kevin Lin|Maria Alvarez).*?(?=\n\n)/s, '');
         
-        // Check for book recommendations
+        // First add the processed response to chat
+        addMessage(cleanedResponse, 'bot');
+        
+        // Then check for book recommendations and add them below
         const bookRecommendations = checkForBookRecommendations(cleanedResponse);
         if (bookRecommendations.length > 0) {
             addBookshelfMessage(bookRecommendations);
         }
         
-        // Check for resource recommendations
+        // Finally check for resource recommendations and add them below
         const resourceRecommendations = checkForResourceRecommendations(cleanedResponse);
         if (resourceRecommendations.length > 0) {
             addResourceMessage(resourceRecommendations);
         }
-        
-        // Add the processed response to chat
-        addMessage(cleanedResponse, 'bot');
     }
     
     function checkForBookRecommendations(text) {
@@ -205,7 +205,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function checkForResourceRecommendations(text) {
-        const resourceRegex = /(?:Here are some resources:|Resources:|For more information:|Learn more:)([\s\S]*?)(?=\n\n|$)/g;
+        // Look for resources section with various possible headings
+        const resourceRegex = /(?:Resources:|Here are some resources:|Learn more:|For more information:|Online resources:|Recommended resources:)([\s\S]*?)(?=\n\n|$)/g;
         const matches = [];
         let match;
         
@@ -215,9 +216,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const urlMatches = resourcesText.match(urlRegex) || [];
             
             urlMatches.forEach(url => {
-                const title = resourcesText.split(url)[0].trim().replace(/^[•\-\*]\s*/, '');
+                // Extract title from before the URL
+                let title = resourcesText.split(url)[0].trim().replace(/^[•\-\*]\s*/, '');
+                
+                // If no title found, use the URL itself
+                if (!title) {
+                    title = url;
+                }
+                
                 matches.push({
-                    title: title || url,
+                    title: title,
                     url: url
                 });
             });
@@ -272,9 +280,14 @@ document.addEventListener('DOMContentLoaded', function() {
         html += '<div class="resource-title">Recommended Resources:</div>';
         resources.forEach(resource => {
             html += `
-                <a href="${resource.url}" target="_blank" rel="noopener noreferrer" class="resource-link">
-                    ${resource.title}
-                </a>
+                <div class="resource-item">
+                    <a href="${resource.url}" target="_blank" rel="noopener noreferrer" class="resource-link">
+                        ${resource.title}
+                    </a>
+                    <button class="add-to-bookshelf" data-title="${resource.title}" data-url="${resource.url}">
+                        Add to Bookshelf
+                    </button>
+                </div>
             `;
         });
         html += '</div>';
@@ -282,6 +295,17 @@ document.addEventListener('DOMContentLoaded', function() {
         messageContent.innerHTML = html;
         messageDiv.appendChild(messageContent);
         chatMessages.appendChild(messageDiv);
+        
+        // Add event listeners to the "Add to Bookshelf" buttons
+        messageDiv.querySelectorAll('.add-to-bookshelf').forEach(button => {
+            button.addEventListener('click', function() {
+                const title = this.dataset.title;
+                const url = this.dataset.url;
+                addResourceToBookshelf(title, url, currentSkillDomain);
+                this.textContent = 'Added to Bookshelf';
+                this.disabled = true;
+            });
+        });
     }
     
     function addBookToBookshelf(title, author, category) {
@@ -299,6 +323,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function addResourceToBookshelf(title, url, category) {
+        // Check if resource already exists
+        if (!books.some(book => book.title === title)) {
+            books.push({
+                title: title,
+                author: 'Online Resource',
+                category: category,
+                read: false,
+                dateAdded: new Date().toISOString(),
+                url: url
+            });
+            localStorage.setItem('books', JSON.stringify(books));
+            renderBookshelf();
+        }
+    }
+    
     function toggleBookReadStatus(title) {
         const book = books.find(b => b.title === title);
         if (book) {
@@ -310,6 +350,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function renderBookshelf() {
         bookshelf.innerHTML = '';
+        
+        // Add multi-select controls at the top
+        const multiSelectControls = document.createElement('div');
+        multiSelectControls.classList.add('multi-select-controls');
+        multiSelectControls.innerHTML = `
+            <div class="multi-select-actions">
+                <button id="mark-selected-read" class="action-button">Mark Selected as Read</button>
+                <button id="delete-selected" class="action-button">Delete Selected</button>
+            </div>
+        `;
+        bookshelf.appendChild(multiSelectControls);
         
         // Filter books based on active tab
         const filteredBooks = activeTab === 'read' 
@@ -329,31 +380,78 @@ document.addEventListener('DOMContentLoaded', function() {
         // Sort books by date added (newest first)
         filteredBooks.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
         
+        // Create a container for the books
+        const booksContainer = document.createElement('div');
+        booksContainer.classList.add('books-container');
+        
         filteredBooks.forEach(book => {
             const bookItem = document.createElement('div');
             bookItem.classList.add('book-item');
             if (book.read) bookItem.classList.add('read');
             
+            // Create title element - if it's a resource with URL, make it clickable
+            let titleElement = `<div class="book-title">${book.title}</div>`;
+            if (book.url) {
+                titleElement = `<div class="book-title"><a href="${book.url}" target="_blank" rel="noopener noreferrer">${book.title}</a></div>`;
+            }
+            
             bookItem.innerHTML = `
+                <div class="book-checkbox">
+                    <input type="checkbox" id="book-${book.title.replace(/\s+/g, '-')}" ${book.read ? 'checked' : ''}>
+                    <label for="book-${book.title.replace(/\s+/g, '-')}"></label>
+                </div>
                 <div class="book-info">
-                    <div class="book-title">${book.title}</div>
+                    ${titleElement}
                     <div class="book-author">by ${book.author}</div>
                     <div class="book-category ${book.category}">${book.category}</div>
-                </div>
-                <div class="book-actions">
-                    <label class="read-toggle">
-                        <input type="checkbox" ${book.read ? 'checked' : ''}>
-                        <span class="checkmark"></span>
-                    </label>
                 </div>
             `;
             
             // Add event listener to checkbox
             const checkbox = bookItem.querySelector('input[type="checkbox"]');
-            checkbox.addEventListener('change', () => toggleBookReadStatus(book.title));
+            checkbox.addEventListener('change', () => {
+                if (!event.shiftKey) {
+                    // Single select - toggle read status
+                    toggleBookReadStatus(book.title);
+                } else {
+                    // Multi-select - just update the UI
+                    bookItem.classList.toggle('selected');
+                }
+            });
             
-            bookshelf.appendChild(bookItem);
+            booksContainer.appendChild(bookItem);
         });
+        
+        bookshelf.appendChild(booksContainer);
+        
+        // Add event listeners for multi-select actions
+        document.getElementById('mark-selected-read').addEventListener('click', markSelectedAsRead);
+        document.getElementById('delete-selected').addEventListener('click', deleteSelected);
+    }
+    
+    function markSelectedAsRead() {
+        const selectedBooks = document.querySelectorAll('.book-item.selected');
+        selectedBooks.forEach(bookItem => {
+            const checkbox = bookItem.querySelector('input[type="checkbox"]');
+            const title = bookItem.querySelector('.book-title').textContent;
+            toggleBookReadStatus(title);
+        });
+    }
+    
+    function deleteSelected() {
+        if (confirm('Are you sure you want to delete the selected items?')) {
+            const selectedBooks = document.querySelectorAll('.book-item.selected');
+            selectedBooks.forEach(bookItem => {
+                const title = bookItem.querySelector('.book-title').textContent;
+                deleteBook(title);
+            });
+        }
+    }
+    
+    function deleteBook(title) {
+        books = books.filter(book => book.title !== title);
+        localStorage.setItem('books', JSON.stringify(books));
+        renderBookshelf();
     }
     
     // Auto-resize textarea

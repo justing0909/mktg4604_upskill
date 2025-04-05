@@ -1,14 +1,19 @@
 from flask import Flask, render_template, request, jsonify
 import redis
 import json
+import os
+from dotenv import load_dotenv
 from search import embed_query, cosine_similarity, retrieve_top_k, generate_response
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 
-# Redis configuration
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
-REDIS_DB = 0
+# Redis configuration from environment variables
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_DB = int(os.getenv("REDIS_DB", 0))
 
 # Initialize Redis connection
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)

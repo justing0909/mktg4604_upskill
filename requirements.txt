@@ -2,4 +2,5 @@ flask==2.3.3
 redis==5.0.1
 numpy==1.26.0
 requests==2.31.0
-PyMuPDF==1.23.7  # For PDF processing in ingest.py 
+PyMuPDF==1.23.7  # For PDF processing in ingest.py
+python-dotenv==1.0.0  # For loading environment variables 
