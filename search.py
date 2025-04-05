@@ -88,7 +88,7 @@ def generate_response(context_chunks, query, skill_domain='both', read_books=Non
 {domain_text}
 {read_books_text}
 
-Use the context below (extracted from university syllabi) to answer their question. Also, recommend:
+Use the context below to answer their question. Also, recommend:
 - Relevant textbooks or academic readings
 - Online resources, tools, or platforms (e.g. Coursera, LinkedIn Learning)
 - Podcasts, newsletters, or blogs to stay up-to-date
