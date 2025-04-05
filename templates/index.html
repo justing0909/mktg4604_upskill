@@ -8,37 +8,58 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-graduation-cap"></i> Upskill Assistant</h1>
-            <p>Get personalized guidance for upskilling in Data Science and Business</p>
-        </header>
-        
-        <div class="skill-selector">
-            <h2>Select your skill domain:</h2>
-            <div class="skill-options">
-                <button class="skill-option active" data-skill="both">Both</button>
-                <button class="skill-option" data-skill="data-science">Data Science</button>
-                <button class="skill-option" data-skill="business">Business</button>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="bookshelf-header">
+                <h2><i class="fas fa-book"></i> My Bookshelf</h2>
+                <button id="clear-bookshelf" class="clear-button">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
+            </div>
+            <div class="bookshelf-content" id="bookshelf">
+                <p class="empty-bookshelf">No books added yet. Books recommended by the assistant will appear here.</p>
             </div>
         </div>
         
-        <div class="chat-container">
-            <div class="chat-messages" id="chat-messages">
-                <div class="message bot">
-                    <div class="message-content">
-                        <p>Hello! I'm your upskilling assistant. I can help you improve your skills in Data Science and Business. What would you like to learn about today?</p>
+        <div class="main-content">
+            <div class="container">
+                <header>
+                    <div class="header-top">
+                        <h1><i class="fas fa-graduation-cap"></i> Upskill Assistant</h1>
+                        <button id="dark-mode-toggle" class="dark-mode-toggle">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </div>
+                    <p>Get personalized guidance for upskilling in Data Science and Business</p>
+                </header>
+                
+                <div class="skill-selector">
+                    <h2>Select your skill domain:</h2>
+                    <div class="skill-options">
+                        <button class="skill-option active" data-skill="both">Both</button>
+                        <button class="skill-option" data-skill="data-science">Data Science</button>
+                        <button class="skill-option" data-skill="business">Business</button>
                     </div>
                 </div>
-            </div>
-            
-            <div class="chat-input-container">
-                <form id="chat-form">
-                    <textarea id="user-input" placeholder="Type your question here..." rows="1"></textarea>
-                    <button type="submit" id="send-button">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </form>
+                
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message bot">
+                            <div class="message-content">
+                                <p>Hello! I'm your upskilling assistant. I can help you improve your skills in Data Science and Business. What would you like to learn about today?</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <form id="chat-form">
+                            <textarea id="user-input" placeholder="Type your question here..." rows="1"></textarea>
+                            <button type="submit" id="send-button">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -51,20 +51,26 @@ def retrieve_top_k(query, skill_domain='both', k=TOP_K):
     results.sort(reverse=True, key=lambda x: x[0])
     return [text for _, text in results[:k]]
 
-def generate_response(context_chunks, query, skill_domain='both'):
+def generate_response(context_chunks, query, skill_domain='both', read_books=None):
     context = "\n\n".join(context_chunks)
     
     # Customize prompt based on skill domain
     domain_text = ""
     if skill_domain == 'data-science':
-        domain_text = "Focus on Data Science skills and concepts."
+        domain_text = "Focus on Data Science skills and concepts, and assume the role of a chief data scientist that is both knowledgeable and relatable to a senior year undergraduate student. Offer resources based on the corpus of data indexed, while providing directly accessible links and resources to the user, and continue the conversation after responding."
     elif skill_domain == 'business':
-        domain_text = "Focus on Business skills and concepts."
+        domain_text = "Focus on Business skills and concepts, and assume the role of a chief business officer that is both knowledgeable and relatable to a senior year undergraduate student. Offer resources based on the corpus of data indexed, while providing directly accessible links and resources to the user, and continue the conversation after responding."
     else:
-        domain_text = "Cover both Data Science and Business skills as appropriate."
+        domain_text = "Cover both Data Science and Business skills as appropriate, and assume the role of a chief data scientist and chief business officer that are both knowledgeable and relatable to a senior year undergraduate student. Offer resources based on the corpus of data indexed, while providing directly accessible links and resources to the user, and continue the conversation after responding."
+    
+    # Add information about read books
+    read_books_text = ""
+    if read_books and len(read_books) > 0:
+        read_books_text = f"The user has already read the following books, so please avoid recommending them again: {', '.join(read_books)}."
     
     full_prompt = f"""You are a helpful assistant providing guidance on upskilling.
 {domain_text}
+{read_books_text}
 Here is the context:
 {context}
 
@@ -86,6 +92,7 @@ def chat():
     data = request.json
     query = data.get('message', '')
     skill_domain = data.get('skill_domain', 'both')
+    read_books = data.get('read_books', [])
     
     if not query:
         return jsonify({'error': 'No message provided'}), 400
@@ -95,7 +102,7 @@ def chat():
         top_chunks = retrieve_top_k(query, skill_domain)
         
         # Generate response using the Llama model
-        answer = generate_response(top_chunks, query, skill_domain)
+        answer = generate_response(top_chunks, query, skill_domain, read_books)
         
         return jsonify({
             'response': answer,
