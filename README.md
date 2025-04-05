@@ -10,4 +10,53 @@
 - The "Corpus" folder contains .pdf files that the LLM system trains from by taking key terms to process
 - 'ingest.py' is used to chunk and embed the files found in the "Corpus" folder, or simply the preprocessing stage
   - **IMPORTANT:** To run this successfully, make sure to replace the 'CORPUS' path directory with where you currently store it
--  'search.py' uses a vector database (Redis) along with LLM (llama3) and retrieves the best responses based on cosine similarity
+- 'search.py' uses a vector database (Redis) along with LLM (llama3) and retrieves the best responses based on cosine similarity
+
+### Web Interface Setup and Usage:
+
+#### Prerequisites:
+- Python 3.8 or higher
+- Redis server running locally (default: localhost:6379)
+- Ollama running locally with the required models (nomic-embed-text and llama3.2:1b)
+
+#### Installation:
+1. Install the required dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+2. Make sure Redis is running on your system:
+   ```
+   redis-server
+   ```
+
+3. Make sure Ollama is running with the required models:
+   ```
+   ollama run nomic-embed-text
+   ollama run llama3.2:1b
+   ```
+
+#### Running the Application:
+1. First, ingest the PDF documents:
+   ```
+   python ingest.py
+   ```
+
+2. Start the web application:
+   ```
+   python app.py
+   ```
+
+3. Open your browser and navigate to:
+   ```
+   http://localhost:5001
+   ```
+
+4. Start chatting with the Llama model about the content in your PDF documents!
+
+#### Features:
+- Modern, responsive chat interface
+- Real-time typing indicators
+- Support for multi-line messages (Shift+Enter)
+- Error handling and user feedback
+- Mobile-friendly design

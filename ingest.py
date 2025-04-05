@@ -9,7 +9,7 @@ import requests
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 REDIS_DB = 0
-CORPUS_DIR = "C:/Users/jenny/Downloads/MKTG4604/mktg4604_upskill-main/mktg4604_upskill-main/Corpus"
+CORPUS_DIR = "Users/justi/Downloads/MKTG4604//mktg4604_upskill/Corpus"
 OLLAMA_MODEL = "nomic-embed-text"
 
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
