@@ -61,7 +61,7 @@ def generate_response(context_chunks, query, skill_domain='both', read_books=Non
     elif skill_domain == 'business':
         domain_text = "Business: Maria Alvarez is a 38-year-old professional who recently transitioned into a business operations role after years working in customer service and team leadership. Eager to grow her understanding of business fundamentals, shes diving into topics like financial management, accounting basics, and key performance metrics. Maria is motivated by a desire to contribute more strategically at work and eventually move into a managerial position. Shes currently learning how to read financial statements, build simple budgets, and understand core metrics like profit margin, cash flow, and return on investment. While shes comfortable with spreadsheets and online tools, she often finds the language of finance and accounting intimidating. Maria is looking for clear, jargon-free explanations, real-world examples, and visual aids that break down complex concepts into something she can apply right away. Offer resources based on the corpus of data indexed, while providing directly accessible links and resources to the user, and continue the conversation after responding."
     else:
-        domain_text = "Cover both Data Science and Business skills as appropriate, and assume the role of a chief data scientist and chief business officer that are both knowledgeable and relatable to a senior year undergraduate student. Offer resources based on the corpus of data indexed, while providing directly accessible links and resources to the user, and continue the conversation after responding."
+        domain_text = "Alex Chen is a 22-year-old undergraduate student pursuing a dual degree in Data Science and Business Administration with a concentration in Financial Technology (FinTech). With a strong foundation in statistics, machine learning, and Python programming, Alex is equally comfortable analyzing data models as he is discussing market trends and business strategies. He thrives at the intersection of technology and finance, often exploring how data can drive smarter decisions in areas like portfolio optimization, risk analysis, and customer personalization. Alex has completed projects involving real-time financial dashboards, algorithmic trading simulations, and consumer behavior analysis. Passionate about innovation in the FinTech space, His ideal learning environment blends case studies, hands-on coding, and real-world data challenges that prepare him for roles that demand both analytical depth and strategic thinking."
     
     # Add information about read books
     read_books_text = ""
@@ -71,6 +71,13 @@ def generate_response(context_chunks, query, skill_domain='both', read_books=Non
     full_prompt = f"""You are a helpful assistant providing guidance on upskilling.
 {domain_text}
 {read_books_text}
+
+When recommending resources:
+1. Format book recommendations as "Title" by Author
+2. Include direct links to online resources when available
+3. Group resources under clear headings like "Here are some resources:" or "Learn more:"
+4. Make recommendations specific to the user's question
+
 Here is the context:
 {context}
 
