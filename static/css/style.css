@@ -113,6 +113,7 @@ body {
     overflow: hidden;
     transition: transform 0.3s ease;
     position: relative;
+    transform: translateX(0);
 }
 
 .sidebar.collapsed {
