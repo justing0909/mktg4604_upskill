@@ -15,6 +15,19 @@ document.addEventListener('DOMContentLoaded', function() {
     let books = JSON.parse(localStorage.getItem('books')) || [];
     let activeTab = 'all';
     
+    // Add a test book if the bookshelf is empty
+    if (books.length === 0) {
+        books.push({
+            title: "Test Book",
+            author: "Test Author",
+            category: "data-science",
+            read: false,
+            dateAdded: new Date().toISOString()
+        });
+        localStorage.setItem('books', JSON.stringify(books));
+        console.log("Added test book to bookshelf");
+    }
+    
     // Check for dark mode preference
     if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');

@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import redis
 import json
 import os
 from dotenv import load_dotenv
 from search import embed_query, cosine_similarity, retrieve_top_k, generate_response
+import time
 
 # Load environment variables
 load_dotenv()
@@ -18,9 +19,22 @@ REDIS_DB = int(os.getenv("REDIS_DB", 0))
 # Initialize Redis connection
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
+# Add cache-busting for static files
+@app.after_request
+def add_header(response):
+    if 'Cache-Control' not in response.headers:
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    if 'Pragma' not in response.headers:
+        response.headers['Pragma'] = 'no-cache'
+    if 'Expires' not in response.headers:
+        response.headers['Expires'] = '-1'
+    return response
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Add a timestamp to force refresh of static files
+    timestamp = int(time.time())
+    return render_template('index.html', timestamp=timestamp)
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
