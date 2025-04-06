@@ -103,6 +103,88 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Drawer toggle functionality
+    const drawerToggle = document.querySelector('.drawer-toggle');
+    const sidebar = document.querySelector('.sidebar');
+
+    drawerToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+    });
+
+    // Multi-select functionality
+    function updateMultiSelectControls() {
+        const selectedItems = document.querySelectorAll('.resource-item.selected');
+        const multiSelectControls = document.querySelector('.multi-select-controls');
+        
+        if (selectedItems.length > 0) {
+            multiSelectControls.classList.add('visible');
+        } else {
+            multiSelectControls.classList.remove('visible');
+        }
+    }
+
+    function handleResourceSelection(checkbox, resourceItem) {
+        if (checkbox.checked) {
+            resourceItem.classList.add('selected');
+        } else {
+            resourceItem.classList.remove('selected');
+        }
+        updateMultiSelectControls();
+    }
+
+    // Mark selected as read
+    document.getElementById('mark-selected-read').addEventListener('click', () => {
+        const selectedItems = document.querySelectorAll('.resource-item.selected');
+        selectedItems.forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            checkbox.checked = true;
+            item.classList.add('read');
+        });
+        updateMultiSelectControls();
+    });
+
+    // Delete selected
+    document.getElementById('delete-selected').addEventListener('click', () => {
+        if (confirm('Are you sure you want to delete the selected items?')) {
+            const selectedItems = document.querySelectorAll('.resource-item.selected');
+            selectedItems.forEach(item => {
+                item.remove();
+            });
+            updateMultiSelectControls();
+        }
+    });
+
+    // Update resource item creation
+    function createResourceItem(resource) {
+        const resourceItem = document.createElement('div');
+        resourceItem.className = 'resource-item';
+        
+        const checkbox = document.createElement('div');
+        checkbox.className = 'resource-checkbox';
+        checkbox.innerHTML = `
+            <input type="checkbox" id="resource-${resource.id}">
+            <label for="resource-${resource.id}"></label>
+        `;
+        
+        const content = document.createElement('div');
+        content.className = 'resource-content';
+        content.innerHTML = `
+            <div class="resource-title">${resource.title}</div>
+            <div class="resource-author">${resource.author}</div>
+        `;
+        
+        resourceItem.appendChild(checkbox);
+        resourceItem.appendChild(content);
+        
+        // Add event listener for checkbox
+        const checkboxInput = checkbox.querySelector('input[type="checkbox"]');
+        checkboxInput.addEventListener('change', () => {
+            handleResourceSelection(checkboxInput, resourceItem);
+        });
+        
+        return resourceItem;
+    }
+    
     // Functions
     function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
@@ -416,6 +498,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     // Multi-select - just update the UI
                     bookItem.classList.toggle('selected');
+                    updateMultiSelectControlsVisibility();
                 }
             });
             
@@ -427,6 +510,24 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add event listeners for multi-select actions
         document.getElementById('mark-selected-read').addEventListener('click', markSelectedAsRead);
         document.getElementById('delete-selected').addEventListener('click', deleteSelected);
+        
+        // Update visibility of multi-select controls
+        updateMultiSelectControlsVisibility();
+    }
+    
+    function updateMultiSelectControlsVisibility() {
+        const selectedBooks = document.querySelectorAll('.book-item.selected');
+        const multiSelectControls = document.querySelector('.multi-select-controls');
+        
+        console.log('Selected books count:', selectedBooks.length);
+        
+        if (selectedBooks.length > 0) {
+            multiSelectControls.classList.add('visible');
+            console.log('Multi-select controls should be visible');
+        } else {
+            multiSelectControls.classList.remove('visible');
+            console.log('Multi-select controls should be hidden');
+        }
     }
     
     function markSelectedAsRead() {
@@ -436,6 +537,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const title = bookItem.querySelector('.book-title').textContent;
             toggleBookReadStatus(title);
         });
+        
+        // Clear selection after marking as read
+        selectedBooks.forEach(bookItem => {
+            bookItem.classList.remove('selected');
+        });
+        
+        // Update visibility of multi-select controls
+        updateMultiSelectControlsVisibility();
     }
     
     function deleteSelected() {
@@ -445,13 +554,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 const title = bookItem.querySelector('.book-title').textContent;
                 deleteBook(title);
             });
+            
+            // Update visibility of multi-select controls
+            updateMultiSelectControlsVisibility();
         }
     }
     
     function deleteBook(title) {
+        // Remove the book from the books array
         books = books.filter(book => book.title !== title);
+        
+        // Update localStorage
         localStorage.setItem('books', JSON.stringify(books));
+        
+        // Re-render the bookshelf
         renderBookshelf();
+    }
+    
+    // Add a function to manually show the controls for testing
+    function showMultiSelectControls() {
+        const multiSelectControls = document.querySelector('.multi-select-controls');
+        multiSelectControls.classList.add('visible');
+        console.log('Forced multi-select controls to be visible');
     }
     
     // Auto-resize textarea

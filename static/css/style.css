@@ -111,7 +111,37 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: background-color 0.3s, border-color 0.3s;
+    transition: transform 0.3s ease;
+    position: relative;
+}
+
+.sidebar.collapsed {
+    transform: translateX(-100%);
+}
+
+.drawer-toggle {
+    position: absolute;
+    right: -20px;
+    top: 20px;
+    width: 20px;
+    height: 40px;
+    background-color: var(--sidebar-bg);
+    border: 1px solid var(--border-color);
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+.drawer-toggle i {
+    transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed .drawer-toggle i {
+    transform: rotate(180deg);
 }
 
 .main-content {
@@ -222,32 +252,40 @@ body.dark-mode .dark-mode-toggle:hover {
 
 /* Multi-select controls */
 .multi-select-controls {
-    margin-bottom: 15px;
     padding: 10px;
     background-color: var(--container-bg);
     border-radius: 8px;
-    box-shadow: 0 2px 4px var(--shadow-color);
+    margin-bottom: 15px;
+    display: none;
+}
+
+.multi-select-controls.visible {
+    display: block;
 }
 
 .multi-select-actions {
     display: flex;
-    justify-content: center;
     gap: 10px;
+    justify-content: center;
 }
 
 .action-button {
-    background-color: var(--primary-color);
-    color: white;
+    padding: 8px 16px;
     border: none;
     border-radius: 4px;
-    padding: 8px 12px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 14px;
     transition: background-color 0.3s;
 }
 
-.action-button:hover {
-    background-color: var(--accent-color);
+.action-button.mark-read {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.action-button.delete {
+    background-color: var(--clear-button-color);
+    color: white;
 }
 
 /* Books container */
@@ -285,6 +323,8 @@ body.dark-mode .dark-mode-toggle:hover {
     align-items: center;
     justify-content: center;
     margin-top: 3px;
+    min-width: 16px;
+    margin-right: 5px;
 }
 
 .book-checkbox input[type="checkbox"] {
@@ -298,11 +338,11 @@ body.dark-mode .dark-mode-toggle:hover {
 .book-checkbox label {
     position: relative;
     display: inline-block;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     background-color: var(--container-bg);
     border: 2px solid var(--border-color);
-    border-radius: 4px;
+    border-radius: 50%; /* Make it circular */
     cursor: pointer;
     transition: all 0.3s;
 }
@@ -316,10 +356,10 @@ body.dark-mode .dark-mode-toggle:hover {
     content: "";
     position: absolute;
     display: none;
-    left: 6px;
+    left: 5px;
     top: 2px;
-    width: 5px;
-    height: 10px;
+    width: 4px;
+    height: 8px;
     border: solid white;
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
@@ -331,6 +371,7 @@ body.dark-mode .dark-mode-toggle:hover {
 
 .book-info {
     flex: 1;
+    padding-top: 2px;
 }
 
 .book-title {
@@ -443,7 +484,8 @@ body.dark-mode .dark-mode-toggle:hover {
 }
 
 .bot .message-content {
-    background-color: var(--message-bg);
+    background-color: var(--bot-message-bg);
+    border: 1px solid var(--border-color);
     color: var(--text-color);
     border-bottom-left-radius: 4px;
 }
@@ -735,15 +777,61 @@ body.dark-mode .dark-mode-toggle:hover {
 
 .resource-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
     padding: 12px;
     background-color: var(--container-bg);
     border-radius: 8px;
+    margin-bottom: 10px;
     box-shadow: 0 2px 4px var(--shadow-color);
-    border-left: 3px solid var(--primary-color);
-    transition: background-color 0.3s, box-shadow 0.3s;
+    position: relative;
+}
+
+.resource-checkbox {
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.resource-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.resource-checkbox label {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-color: var(--container-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.resource-checkbox input[type="checkbox"]:checked + label {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.resource-checkbox label:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 3px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.resource-checkbox input[type="checkbox"]:checked + label:after {
+    display: block;
 }
 
 .resource-link {
