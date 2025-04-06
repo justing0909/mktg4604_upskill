@@ -153,7 +153,7 @@ If you can recommend any books or online resources related to this topic, please
             "model": LLM_MODEL,
             "prompt": full_prompt,
             "stream": False
-        }, timeout=60)
+        })
 
         print("Received response from Ollama")
         return response.json()["response"]

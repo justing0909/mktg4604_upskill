@@ -10,28 +10,41 @@
 <body>
     <div class="app-container">
         <div class="sidebar">
-            <div class="drawer-toggle">
-                <i class="fas fa-chevron-left"></i>
-            </div>
             <div class="bookshelf-header">
-                <h2><i class="fas fa-book"></i> My Bookshelf</h2>
+                <div class="bookshelf-header-left">
+                    <h2><i class="fas fa-book"></i> My Bookshelf</h2>
+                    <button id="select-all" title="Select All">
+                        <i class="fas fa-check-double"></i> Select All
+                    </button>
+                </div>
                 <button id="clear-bookshelf" class="clear-button">
                     <i class="fas fa-trash"></i> Clear All
                 </button>
             </div>
-            <div class="multi-select-controls">
-                <div class="multi-select-actions">
-                    <button class="action-button mark-read" id="mark-selected-read">
-                        <i class="fas fa-check"></i> Mark Selected as Read
+            <div class="bookshelf-container">
+                <div class="bookshelf-tabs">
+                    <button class="bookshelf-tab" data-tab="starred">Starred</button>
+                    <button class="bookshelf-tab active" data-tab="unread">Unread Resources</button>
+                    <button class="bookshelf-tab" data-tab="read">Read Resources</button>
+                </div>
+                <div class="multi-select-controls">
+                    <button id="mark-selected-read">
+                        <i class="fas fa-check"></i>
+                        Mark Selected as Read
                     </button>
-                    <button class="action-button delete" id="delete-selected">
-                        <i class="fas fa-trash"></i> Delete Selected
+                    <button id="delete-selected">
+                        <i class="fas fa-trash"></i>
+                        Delete Selected
                     </button>
                 </div>
+                <div id="bookshelf" class="bookshelf">
+                    <!-- Resources will be dynamically added here -->
+                </div>
             </div>
-            <div class="bookshelf-content" id="bookshelf">
-                <p class="empty-bookshelf">No books added yet. Books recommended by the assistant will appear here.</p>
-            </div>
+        </div>
+        
+        <div class="drawer-toggle">
+            <i class="fas fa-chevron-right"></i>
         </div>
         
         <div class="main-content">

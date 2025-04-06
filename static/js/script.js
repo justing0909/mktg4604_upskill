@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM fully loaded and parsed");
+    
     // DOM Elements
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
@@ -8,12 +10,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearBookshelfBtn = document.getElementById('clear-bookshelf');
     const bookshelfTabs = document.querySelectorAll('.bookshelf-tab');
     const bookshelf = document.getElementById('bookshelf');
+    const sidebar = document.querySelector('.sidebar');
+    const drawerToggle = document.querySelector('.drawer-toggle');
+    const sendButton = document.getElementById('send-button');
+    
+    console.log("Bookshelf element:", bookshelf);
+    console.log("Sidebar element:", sidebar);
+    console.log("Drawer toggle element:", drawerToggle);
     
     // State variables
     let currentSkillDomain = 'both';
     let lastSelectedSkillDomain = 'both';
     let books = JSON.parse(localStorage.getItem('books')) || [];
     let activeTab = 'all';
+    
+    console.log("Current books in localStorage:", books);
     
     // Add a test book if the bookshelf is empty
     if (books.length === 0) {
@@ -41,8 +52,21 @@ document.addEventListener('DOMContentLoaded', function() {
         tab.addEventListener('click', () => switchTab(tab.dataset.tab));
     });
     
+    // Initialize drawer toggle
+    if (drawerToggle && sidebar) {
+        drawerToggle.addEventListener('click', function() {
+            console.log('Drawer toggle clicked');
+            sidebar.classList.toggle('collapsed');
+            console.log('Sidebar collapsed state:', sidebar.classList.contains('collapsed'));
+        });
+    } else {
+        console.error('Drawer toggle or sidebar not found');
+    }
+    
     // Initialize bookshelf
+    console.log("Rendering bookshelf...");
     renderBookshelf();
+    console.log("Bookshelf rendered");
     
     // Handle skill selection
     skillOptions.forEach(option => {
@@ -70,6 +94,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Update send button state based on input content
+    userInput.addEventListener('input', function() {
+        if (this.value.trim()) {
+            sendButton.classList.add('active');
+        } else {
+            sendButton.classList.remove('active');
+        }
+        
+        // Existing auto-resize code
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+    
     // Handle chat form submission
     chatForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -80,6 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add user message to chat
         addMessage(message, 'user');
         userInput.value = '';
+        sendButton.classList.remove('active');
         
         // Show typing indicator
         const typingIndicator = addTypingIndicator();
@@ -116,14 +154,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Drawer toggle functionality
-    const drawerToggle = document.querySelector('.drawer-toggle');
-    const sidebar = document.querySelector('.sidebar');
-
-    drawerToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-    });
-
     // Multi-select functionality
     function updateMultiSelectControls() {
         const selectedItems = document.querySelectorAll('.resource-item.selected');
@@ -159,40 +189,121 @@ document.addEventListener('DOMContentLoaded', function() {
     // Delete selected
     document.getElementById('delete-selected').addEventListener('click', () => {
         if (confirm('Are you sure you want to delete the selected items?')) {
-            const selectedItems = document.querySelectorAll('.resource-item.selected');
-            selectedItems.forEach(item => {
-                item.remove();
+            const selectedItems = document.querySelectorAll('.resource-checkbox:checked');
+            const books = JSON.parse(localStorage.getItem('books') || '[]');
+            
+            selectedItems.forEach(checkbox => {
+                const resourceItem = checkbox.closest('.resource-item');
+                const title = resourceItem.querySelector('.resource-title').textContent;
+                const bookIndex = books.findIndex(b => b.title === title);
+                if (bookIndex !== -1) {
+                    books.splice(bookIndex, 1);
+                }
             });
-            updateMultiSelectControls();
+            
+            localStorage.setItem('books', JSON.stringify(books));
+            renderBookshelf();
         }
     });
 
+    // Handle clear all in current tab
+    document.getElementById('clear-bookshelf').addEventListener('click', () => {
+        const activeTab = document.querySelector('.bookshelf-tab.active').dataset.tab;
+        if (confirm(`Are you sure you want to clear all ${activeTab === 'read' ? 'read' : 'unread'} resources?`)) {
+            const books = JSON.parse(localStorage.getItem('books') || '[]');
+            const remainingBooks = activeTab === 'read'
+                ? books.filter(book => !book.read)
+                : books.filter(book => book.read);
+            
+            localStorage.setItem('books', JSON.stringify(remainingBooks));
+            renderBookshelf();
+        }
+    });
+
+    // Add select all functionality
+    const selectAllBtn = document.createElement('button');
+    selectAllBtn.id = 'select-all';
+    selectAllBtn.innerHTML = '<i class="fas fa-check-double"></i> Select All';
+    selectAllBtn.className = 'control-btn select-all';
+
+    // Insert select all button before the multi-select controls
+    const multiSelectControls = document.querySelector('.multi-select-controls');
+    multiSelectControls.parentNode.insertBefore(selectAllBtn, multiSelectControls);
+
+    selectAllBtn.addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('.resource-checkbox');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !allChecked;
+            const resourceItem = checkbox.closest('.resource-item');
+            resourceItem.classList.toggle('selected', !allChecked);
+        });
+        
+        updateSelection();
+    });
+
     // Update resource item creation
-    function createResourceItem(resource) {
+    function createResourceElement(resource) {
         const resourceItem = document.createElement('div');
         resourceItem.className = 'resource-item';
         
-        const checkbox = document.createElement('div');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
         checkbox.className = 'resource-checkbox';
-        checkbox.innerHTML = `
-            <input type="checkbox" id="resource-${resource.id}">
-            <label for="resource-${resource.id}"></label>
-        `;
         
-        const content = document.createElement('div');
-        content.className = 'resource-content';
-        content.innerHTML = `
-            <div class="resource-title">${resource.title}</div>
-            <div class="resource-author">${resource.author}</div>
-        `;
+        const resourceInfo = document.createElement('div');
+        resourceInfo.className = 'resource-info';
+        
+        const title = document.createElement('div');
+        title.className = 'resource-title';
+        title.textContent = resource.title;
+        
+        const description = document.createElement('div');
+        description.className = 'resource-description';
+        description.textContent = resource.author;
+        
+        const category = document.createElement('div');
+        category.className = `resource-category ${resource.category}`;
+        category.textContent = resource.category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        
+        const starButton = document.createElement('button');
+        starButton.className = 'star-button' + (resource.starred ? ' starred' : '');
+        starButton.innerHTML = '<i class="fas fa-star"></i>';
+        starButton.title = resource.starred ? 'Unstar Resource' : 'Star Resource';
+        
+        starButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const books = JSON.parse(localStorage.getItem('books') || '[]');
+            const book = books.find(b => b.title === resource.title);
+            if (book) {
+                book.starred = !book.starred;
+                localStorage.setItem('books', JSON.stringify(books));
+                starButton.classList.toggle('starred');
+                starButton.title = book.starred ? 'Unstar Resource' : 'Star Resource';
+            }
+        });
+        
+        resourceInfo.appendChild(title);
+        resourceInfo.appendChild(description);
+        resourceInfo.appendChild(category);
         
         resourceItem.appendChild(checkbox);
-        resourceItem.appendChild(content);
+        resourceItem.appendChild(resourceInfo);
+        resourceItem.appendChild(starButton);
         
-        // Add event listener for checkbox
-        const checkboxInput = checkbox.querySelector('input[type="checkbox"]');
-        checkboxInput.addEventListener('change', () => {
-            handleResourceSelection(checkboxInput, resourceItem);
+        // Add click handler for selection
+        resourceItem.addEventListener('click', (e) => {
+            if (e.target !== checkbox && e.target !== starButton && !starButton.contains(e.target)) {
+                checkbox.checked = !checkbox.checked;
+                resourceItem.classList.toggle('selected', checkbox.checked);
+                updateSelection();
+            }
+        });
+        
+        checkbox.addEventListener('change', (e) => {
+            resourceItem.classList.toggle('selected', e.target.checked);
+            updateSelection();
         });
         
         return resourceItem;
@@ -240,9 +351,52 @@ document.addEventListener('DOMContentLoaded', function() {
         const messageContent = document.createElement('div');
         messageContent.classList.add('message-content');
         
+        // Convert asterisks to bullet points
+        let processedContent = content;
+        
+        // Check if the content contains asterisks that might be bullet points
+        if (content.includes('*')) {
+            // Split the content by newlines
+            const lines = content.split('\n');
+            let inBulletList = false;
+            let bulletList = [];
+            
+            // Process each line
+            const processedLines = lines.map(line => {
+                // Check if line starts with an asterisk
+                if (line.trim().startsWith('*')) {
+                    if (!inBulletList) {
+                        inBulletList = true;
+                        bulletList = [];
+                    }
+                    // Add the line without the asterisk to the bullet list
+                    bulletList.push(line.trim().substring(1).trim());
+                    return null; // Skip this line in the main content
+                } else {
+                    // If we were in a bullet list and this line doesn't start with an asterisk,
+                    // end the bullet list
+                    if (inBulletList) {
+                        inBulletList = false;
+                        // Create a bullet list HTML
+                        const bulletListHTML = `<ul>${bulletList.map(item => `<li>${item}</li>`).join('')}</ul>`;
+                        return bulletListHTML + line;
+                    }
+                    return line;
+                }
+            });
+            
+            // If we ended while still in a bullet list, add the bullet list to the end
+            if (inBulletList) {
+                processedLines.push(`<ul>${bulletList.map(item => `<li>${item}</li>`).join('')}</ul>`);
+            }
+            
+            // Join the lines back together
+            processedContent = processedLines.filter(line => line !== null).join('\n');
+        }
+        
         // Process links in the message
-        const processedContent = processLinks(content);
-        messageContent.innerHTML = processedContent;
+        const processedContentWithLinks = processLinks(processedContent);
+        messageContent.innerHTML = processedContentWithLinks;
         
         messageDiv.appendChild(messageContent);
         chatMessages.appendChild(messageDiv);
@@ -403,12 +557,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    function addBookToBookshelf(title, author, category) {
+    function addBookToBookshelf(title, description, category) {
         // Check if book already exists
         if (!books.some(book => book.title === title)) {
             books.push({
                 title: title,
-                author: author,
+                author: description || 'No description available',
                 category: category,
                 read: false,
                 dateAdded: new Date().toISOString()
@@ -444,156 +598,114 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function renderBookshelf() {
+        console.log('Starting renderBookshelf');
+        const bookshelf = document.getElementById('bookshelf');
+        if (!bookshelf) {
+            console.error('Bookshelf element not found');
+            return;
+        }
+
+        // Clear the bookshelf
         bookshelf.innerHTML = '';
-        
-        // Add multi-select controls at the top
-        const multiSelectControls = document.createElement('div');
-        multiSelectControls.classList.add('multi-select-controls');
-        multiSelectControls.innerHTML = `
-            <div class="multi-select-actions">
-                <button id="mark-selected-read" class="action-button">Mark Selected as Read</button>
-                <button id="delete-selected" class="action-button">Delete Selected</button>
-            </div>
-        `;
-        bookshelf.appendChild(multiSelectControls);
-        
+
+        // Get books from localStorage
+        const books = JSON.parse(localStorage.getItem('books') || '[]');
+        console.log('Books from localStorage:', books);
+
         // Filter books based on active tab
-        const filteredBooks = activeTab === 'read' 
-            ? books.filter(book => book.read)
-            : books;
+        const activeTab = document.querySelector('.bookshelf-tab.active').dataset.tab;
+        let filteredBooks;
         
+        switch (activeTab) {
+            case 'read':
+                filteredBooks = books.filter(book => book.read);
+                break;
+            case 'starred':
+                filteredBooks = books.filter(book => book.starred);
+                break;
+            default: // unread
+                filteredBooks = books.filter(book => !book.read);
+        }
+
+        // Update mark selected button text
+        const markSelectedButton = document.getElementById('mark-selected-read');
+        if (activeTab === 'read') {
+            markSelectedButton.innerHTML = '<i class="fas fa-times"></i> Mark Selected as Unread';
+        } else {
+            markSelectedButton.innerHTML = '<i class="fas fa-check"></i> Mark Selected as Read';
+        }
+
+        // Show empty message if no books
         if (filteredBooks.length === 0) {
             const emptyMessage = document.createElement('p');
-            emptyMessage.classList.add('empty-bookshelf');
-            emptyMessage.textContent = activeTab === 'read' 
-                ? 'No read books yet.'
-                : 'No books added yet. Books recommended by the assistant will appear here.';
+            emptyMessage.className = 'empty-bookshelf';
+            switch (activeTab) {
+                case 'read':
+                    emptyMessage.textContent = 'No read resources yet. Mark resources as read to see them here.';
+                    break;
+                case 'starred':
+                    emptyMessage.textContent = 'No starred resources yet. Star resources to see them here.';
+                    break;
+                default:
+                    emptyMessage.textContent = 'No unread resources yet. Resources recommended by the assistant will appear here.';
+            }
             bookshelf.appendChild(emptyMessage);
             return;
         }
-        
-        // Sort books by date added (newest first)
-        filteredBooks.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-        
-        // Create a container for the books
-        const booksContainer = document.createElement('div');
-        booksContainer.classList.add('books-container');
-        
+
+        // Create book items
         filteredBooks.forEach(book => {
-            const bookItem = document.createElement('div');
-            bookItem.classList.add('book-item');
-            if (book.read) bookItem.classList.add('read');
-            
-            // Create title element - if it's a resource with URL, make it clickable
-            let titleElement = `<div class="book-title">${book.title}</div>`;
-            if (book.url) {
-                titleElement = `<div class="book-title"><a href="${book.url}" target="_blank" rel="noopener noreferrer">${book.title}</a></div>`;
-            }
-            
-            bookItem.innerHTML = `
-                <div class="book-checkbox">
-                    <input type="checkbox" id="book-${book.title.replace(/\s+/g, '-')}" ${book.read ? 'checked' : ''}>
-                    <label for="book-${book.title.replace(/\s+/g, '-')}"></label>
-                </div>
-                <div class="book-info">
-                    ${titleElement}
-                    <div class="book-author">by ${book.author}</div>
-                    <div class="book-category ${book.category}">${book.category}</div>
-                </div>
-            `;
-            
-            // Add event listener to checkbox
-            const checkbox = bookItem.querySelector('input[type="checkbox"]');
-            checkbox.addEventListener('change', () => {
-                if (!event.shiftKey) {
-                    // Single select - toggle read status
-                    toggleBookReadStatus(book.title);
-                } else {
-                    // Multi-select - just update the UI
-                    bookItem.classList.toggle('selected');
-                    updateMultiSelectControlsVisibility();
-                }
-            });
-            
-            booksContainer.appendChild(bookItem);
+            const resourceElement = createResourceElement(book);
+            bookshelf.appendChild(resourceElement);
         });
-        
-        bookshelf.appendChild(booksContainer);
-        
-        // Add event listeners for multi-select actions
-        document.getElementById('mark-selected-read').addEventListener('click', markSelectedAsRead);
-        document.getElementById('delete-selected').addEventListener('click', deleteSelected);
-        
-        // Update visibility of multi-select controls
-        updateMultiSelectControlsVisibility();
     }
     
-    function updateMultiSelectControlsVisibility() {
-        const selectedBooks = document.querySelectorAll('.book-item.selected');
+    function updateSelection() {
+        const selectedItems = document.querySelectorAll('.resource-checkbox:checked');
         const multiSelectControls = document.querySelector('.multi-select-controls');
         
-        console.log('Selected books count:', selectedBooks.length);
-        
-        if (selectedBooks.length > 0) {
+        if (selectedItems.length > 0) {
             multiSelectControls.classList.add('visible');
-            console.log('Multi-select controls should be visible');
         } else {
             multiSelectControls.classList.remove('visible');
-            console.log('Multi-select controls should be hidden');
         }
     }
-    
-    function markSelectedAsRead() {
-        const selectedBooks = document.querySelectorAll('.book-item.selected');
-        selectedBooks.forEach(bookItem => {
-            const checkbox = bookItem.querySelector('input[type="checkbox"]');
-            const title = bookItem.querySelector('.book-title').textContent;
-            toggleBookReadStatus(title);
-        });
+
+    // Handle marking selected as read/unread
+    document.getElementById('mark-selected-read').addEventListener('click', () => {
+        const selectedItems = document.querySelectorAll('.resource-checkbox:checked');
+        const books = JSON.parse(localStorage.getItem('books') || '[]');
+        const activeTab = document.querySelector('.bookshelf-tab.active').dataset.tab;
         
-        // Clear selection after marking as read
-        selectedBooks.forEach(bookItem => {
-            bookItem.classList.remove('selected');
-        });
-        
-        // Update visibility of multi-select controls
-        updateMultiSelectControlsVisibility();
-    }
-    
-    function deleteSelected() {
-        if (confirm('Are you sure you want to delete the selected items?')) {
-            const selectedBooks = document.querySelectorAll('.book-item.selected');
-            selectedBooks.forEach(bookItem => {
-                const title = bookItem.querySelector('.book-title').textContent;
-                deleteBook(title);
-            });
+        selectedItems.forEach(checkbox => {
+            const resourceItem = checkbox.closest('.resource-item');
+            const title = resourceItem.querySelector('.resource-title').textContent;
             
-            // Update visibility of multi-select controls
-            updateMultiSelectControlsVisibility();
-        }
-    }
-    
-    function deleteBook(title) {
-        // Remove the book from the books array
-        books = books.filter(book => book.title !== title);
+            const book = books.find(b => b.title === title);
+            if (book) {
+                book.read = activeTab !== 'read';
+            }
+        });
         
-        // Update localStorage
         localStorage.setItem('books', JSON.stringify(books));
-        
-        // Re-render the bookshelf
         renderBookshelf();
-    }
-    
-    // Add a function to manually show the controls for testing
-    function showMultiSelectControls() {
-        const multiSelectControls = document.querySelector('.multi-select-controls');
-        multiSelectControls.classList.add('visible');
-        console.log('Forced multi-select controls to be visible');
-    }
+    });
+
+    // Handle tab switching
+    document.querySelectorAll('.bookshelf-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.bookshelf-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderBookshelf();
+        });
+    });
     
     // Auto-resize textarea
     userInput.addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = (this.scrollHeight) + 'px';
     });
+
+    // Update tab text
+    document.querySelector('.bookshelf-tab[data-tab="all"]').textContent = 'Unread Resources';
 }); 
