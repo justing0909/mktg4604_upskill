@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("Drawer toggle element:", drawerToggle);
     
     // State variables
-    let currentSkillDomain = 'both';
-    let lastSelectedSkillDomain = 'both';
+    let currentSkillDomain = ''; // Changed from 'both' to empty string
+    let lastSelectedSkillDomain = ''; // Changed from 'both' to empty string
     let books = JSON.parse(localStorage.getItem('books')) || [];
     let activeTab = 'all';
     
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 skillOptions.forEach(opt => opt.classList.remove('active'));
                 option.classList.add('active');
                 
-                // Add persona message only when switching domains
+                // Add persona message only when selecting a skill
                 addPersonaMessage(skill);
             }
         });
@@ -113,6 +113,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const message = userInput.value.trim();
         if (!message) return;
+        
+        // Prevent sending if no skill domain is selected
+        if (!currentSkillDomain) {
+            addMessage('Please select a skill domain above before sending your message.', 'bot');
+            return;
+        }
         
         // Add user message to chat
         addMessage(message, 'user');
@@ -708,4 +714,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update tab text
     document.querySelector('.bookshelf-tab[data-tab="all"]').textContent = 'Unread Resources';
-}); 
+});
