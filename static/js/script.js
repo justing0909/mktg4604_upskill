@@ -335,11 +335,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function addPersonaMessage(skill) {
         let personaMessage = '';
         if (skill === 'data-science') {
-            personaMessage = "I'm your Data Science upskilling assistant. I can help you with topics like machine learning, data analysis, programming, and statistical methods. What would you like to learn about?";
+            personaMessage = "Hi! I'm Kevin, your Data Science upskilling assistant. I can help you with topics like machine learning, data analysis, programming, and statistical methods. What would you like to learn about?";
         } else if (skill === 'business') {
-            personaMessage = "I'm your Business upskilling assistant. I can help you with topics like marketing, finance, management, and entrepreneurship. What would you like to learn about?";
+            personaMessage = "Hi! I'm María, your Business upskilling assistant. I can help you with topics like marketing, finance, management, and entrepreneurship. What would you like to learn about?";
         } else {
-            personaMessage = "I'm your upskilling assistant for both Data Science and Business. I can help you develop skills in either or both areas. What would you like to learn about?";
+            personaMessage = "Hi! I'm Alex, your upskilling assistant for both Data Science and Business. I can help you develop skills in either or both areas. What would you like to learn about?";
         }
         addMessage(personaMessage, 'bot');
     }
