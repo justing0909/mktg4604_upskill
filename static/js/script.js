@@ -226,8 +226,8 @@ document.addEventListener('DOMContentLoaded', function() {
     selectAllBtn.innerHTML = '<i class="fas fa-check-double"></i> Select All';
     selectAllBtn.className = 'control-btn select-all';
 
-    // Insert select all button before the multi-select controls
-    const multiSelectControls = document.querySelector('.multi-select-controls');
+    // Insert select all button before the clear button
+    const multiSelectControls = document.querySelector('.clear-button');
     multiSelectControls.parentNode.insertBefore(selectAllBtn, multiSelectControls);
 
     selectAllBtn.addEventListener('click', () => {
