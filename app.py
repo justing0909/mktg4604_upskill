@@ -69,7 +69,7 @@ def chat():
         print("Generating data science response that filters through business response")
         data_science_response = generate_response(
             context_chunks, 
-            f"Based on this business perspective: '{business_response}', provide a data science perspective on the same query: '{query}'. Add or subtract anything necessary from the business perspective.",
+            f"Based on this business perspective: '{business_response}', provide a data science perspective on the same query: '{query}'. Add or subtract anything necessary from the business perspective, but do not duplicate anything that the business perspective has already said.",
             'data-science', 
             read_books
         )
