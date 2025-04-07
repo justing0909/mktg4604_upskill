@@ -59,7 +59,28 @@ def chat():
 
     # Generate response using the context
     print("Generating response")
-    response = generate_response(context_chunks, query, skill_domain, read_books)
+    
+    if skill_domain == 'both':
+        # For 'both' skill domain, generate business response first
+        print("Generating business response first")
+        business_response = generate_response(context_chunks, query, 'business', read_books)
+        
+        # Then generate data science response that filters through the business response
+        print("Generating data science response that filters through business response")
+        data_science_response = generate_response(
+            context_chunks, 
+            f"Based on this business perspective: '{business_response}', provide a data science perspective on the same query: '{query}'. Add or subtract anything necessary from the business perspective.",
+            'data-science', 
+            read_books
+        )
+        
+        # Combine the responses
+        combined_response = f"{business_response}\n\nData Science Perspective:\n{data_science_response}"
+        response = combined_response
+    else:
+        # For single skill domain, generate response as usual
+        response = generate_response(context_chunks, query, skill_domain, read_books)
+    
     print("Response generated")
     
     return jsonify({'response': response})
