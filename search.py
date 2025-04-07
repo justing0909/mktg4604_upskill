@@ -137,15 +137,47 @@ def generate_response(context_chunks, query, skill_domain='both', read_books=Non
     print("Starting generate_response function")
     context = "\n\n".join(context_chunks)
 
-    # Simplified prompt for better performance
-    full_prompt = f"""You are a helpful assistant providing guidance on upskilling.
+    if skill_domain == 'data-science':
+        domain_text = (
+            "You are a chief data scientist and mentor, providing guidance to an ambitious senior undergraduate student. "
+            "Focus on technical depth, real-world applications, and resources that strengthen programming, machine learning, data visualization, and data engineering skills."
+        )
+    elif skill_domain == 'business':
+        domain_text = (
+            "You are a strategic business mentor and executive coach, advising a soon-to-graduate business major. "
+            "Focus on core business principles, case-based learning, leadership, finance, and marketing strategies that are useful for entry-level professionals."
+        )
+    else:
+        domain_text = (
+            "You are a cross-domain upskilling mentor with deep experience in both Data Science and Business. "
+            "Help the student understand how these domains intersect, and recommend resources that bridge analytics, strategy, and communication skills."
+        )
 
-Context information:
+    read_books_text = ""
+    if read_books and len(read_books) > 0:
+        read_books_text = (
+            f"\nNote: The student has already read the following books, so do not suggest them again: {', '.join(read_books)}."
+        )
+        
+    full_prompt = f"""You are an AI-powered upskilling assistant helping students prepare for careers in their domain.
+
+{domain_text}
+{read_books_text}
+
+Use the context below to answer their question. Always recommend:
+- Relevant textbooks or academic readings
+- Online resources, tools, or platforms (e.g. Coursera, LinkedIn Learning)
+- Podcasts, newsletters, or blogs to stay up-to-date
+- Key skills to practice and how to improve them
+- Career-relevant advice
+
+Only suggest what is relevant based on the users' requests or your expert knowledge.
+
+Context:
 {context}
 
-Answer the question: {query}
-
-If you can recommend any books or online resources related to this topic, please include them at the end of your response under a "Resources:" heading."""
+Question: {query}
+Upskilling-focused response:"""
 
     print(f"Sending request to Ollama with model: {LLM_MODEL}")
     try:
@@ -157,12 +189,15 @@ If you can recommend any books or online resources related to this topic, please
 
         print("Received response from Ollama")
         return response.json()["response"]
+
     except requests.exceptions.Timeout:
-        print("Request to Ollama timed out after 60 seconds")
+        print("Request to Ollama timed out")
         return "I'm sorry, but the model is taking too long to respond. This could be due to the complexity of your query or the model being overloaded. Please try again with a simpler query or try again later."
+
     except requests.exceptions.ConnectionError:
         print("Connection error when trying to reach Ollama")
         return "I'm sorry, but I couldn't connect to the language model. Please check if Ollama is running and try again."
+
     except Exception as e:
         print(f"Error in generate_response: {e}")
         return f"I encountered an error while generating a response: {str(e)}"
